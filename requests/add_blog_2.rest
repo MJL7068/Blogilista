@@ -1,0 +1,9 @@
+POST http://localhost:3001/api/blogs
+Content-Type: application/json
+
+{
+    "title": "Web-ohjelmointi",
+    "author": "Heikki Virtanen",
+    "url": "wordspot.ohjelmoidaan.com",
+    "likes": 100
+}
