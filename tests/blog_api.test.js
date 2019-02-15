@@ -90,6 +90,30 @@ test('new blog with no title or url sends bad request', async() => {
     .expect(400)
 })
 
+test('blog can be deleted', async () => {
+  const blogsAtStart = await helper.blogsInDb()
+  const blogToDelete = blogsAtStart[0]
+  console.log(blogsAtStart)
+  console.log(blogToDelete)
+  console.log(blogToDelete.id)
+  
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(204)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  console.log(blogsAtEnd)
+
+  expect(blogsAtEnd.length).toBe(
+    helper.initialBlogs.length - 1
+  )
+
+  const titles = blogsAtEnd.map(blog => blog.title)
+  console.log(titles)
+
+  expect(titles).not.toContain(blogToDelete.title)
+})
+
 afterAll(() => {
     mongoose.connection.close()
 })
