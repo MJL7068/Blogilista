@@ -93,16 +93,12 @@ test('new blog with no title or url sends bad request', async() => {
 test('blog can be deleted', async () => {
   const blogsAtStart = await helper.blogsInDb()
   const blogToDelete = blogsAtStart[0]
-  console.log(blogsAtStart)
-  console.log(blogToDelete)
-  console.log(blogToDelete.id)
-  
+
   await api
     .delete(`/api/blogs/${blogToDelete.id}`)
     .expect(204)
 
   const blogsAtEnd = await helper.blogsInDb()
-  console.log(blogsAtEnd)
 
   expect(blogsAtEnd.length).toBe(
     helper.initialBlogs.length - 1
@@ -112,6 +108,28 @@ test('blog can be deleted', async () => {
   console.log(titles)
 
   expect(titles).not.toContain(blogToDelete.title)
+})
+
+test('blog can be updated', async() => {
+  const blogsAtStart = await helper.blogsInDb()
+  const blogToUpdate = blogsAtStart[0]
+
+  const blogObject = {
+    title: blogToUpdate.title,
+    author: blogToUpdate.author,
+    url: blogToUpdate.url,
+    likes: 99
+  }
+
+  await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(blogObject)
+    .expect(200)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  const updatedBlog = blogsAtEnd[0]
+
+  expect(updatedBlog.likes).toBe(99)
 })
 
 afterAll(() => {
