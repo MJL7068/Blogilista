@@ -22,24 +22,34 @@ const favoriteBlog = (blogs) => {
 
 const mostBlogs = (blogs) => {
   const authors = blogs.map(blog => blog.author).filter((value, index, self) => self.indexOf(value) === index)
-  const likes = authors.map(name => (blogs.reduce((count, item) => item.author === name ? count = count + 1 : count = count, 0)))
-  const i = likes.indexOf(Math.max(...likes));
+  const authorsBlogs = authors.map(name => (blogs.reduce((count, item) => item.author === name ? count = count + 1 : count = count, 0)))
+  const i = authorsBlogs.indexOf(Math.max(...authorsBlogs));
 
   const most = {
     author: authors[i],
-    blogs: likes[i]
+    blogs: authorsBlogs[i]
   }
 
   return most
 }
 
 const mostLikes = (blogs) => {
-    
+  const authors = blogs.map(blog => blog.author).filter((value, index, self) => self.indexOf(value) === index)
+  const authorsBlogs = authors.map(name => (blogs.reduce((count, item) => item.author === name ? count = count + item.likes : count = count, 0)))
+  const i = authorsBlogs.indexOf(Math.max(...authorsBlogs));
+
+  const most = {
+    author: authors[i],
+    likes: authorsBlogs[i]
+  }
+
+  return most
 }
 
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }
