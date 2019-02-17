@@ -1,6 +1,17 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+
+const getTokenFrom = request => {
+  const authorization = request.get('Authorization')
+  console.log('auth')
+  console.log(authorization)
+  if (authorization && authorization.startsWith('Bearer')) {
+    return authorization.substring(7)
+  }
+  return null
+}
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog
@@ -9,35 +20,46 @@ blogsRouter.get('/', async (request, response) => {
 })
 
 blogsRouter.post('/', async(request, response) => {
-  if (request.body.title === undefined || request.body.url === undefined) {
-    response.status(400)
-  }
-
-  if (request.body.likes === undefined) {
-    request.body.likes = 0
-  }
-
-  const users = await User.find({})
-  const user = users[0]
-
-  const blog = new Blog({
-    title: request.body.title,
-    author: request.body.author,
-    url: request.body.url,
-    likes: request.body.likes,
-    user: user._id
-  })
+  const body = request.body
+  
+  const token = getTokenFrom(request)
+  console.log(token)
 
   try {
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
+
+    if (body.title === undefined || request.body.url === undefined) {
+      response.status(400)
+    }
+  
+    if (body.likes === undefined) {
+      body.likes = 0
+    }
+  
+    const user = await User.findById(decodedToken.id)
+  
+    const blog = new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: body.likes,
+      user: user._id
+    })
+  
     const savedBlog = await blog.save()
     user.blogs = user.blogs.concat(savedBlog._id)
     await user.save()
-
+  
     response.json(savedBlog.toJSON())
-  } catch(exception) {
-    console.log(exception)
+  } catch (exception) {
     //next(exception)
+    console.log(exception)
   }
+
+  
 })
 
 blogsRouter.put('/:id', async (request, response) => {
