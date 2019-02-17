@@ -19,7 +19,7 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs.map(blog => blog.toJSON()))
 })
 
-blogsRouter.post('/', async(request, response) => {
+blogsRouter.post('/', async(request, response, next) => {
   const body = request.body
   
   const token = getTokenFrom(request)
@@ -55,14 +55,13 @@ blogsRouter.post('/', async(request, response) => {
   
     response.json(savedBlog.toJSON())
   } catch (exception) {
-    //next(exception)
-    console.log(exception)
+    next(exception)
   }
 
   
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', async (request, response, next) => {
   const body = request.body
 
   const blog = {
@@ -76,16 +75,32 @@ blogsRouter.put('/:id', async (request, response) => {
     .then(updatedBlog => {
       response.json(updatedBlog.toJSON())
     })
-    .catch(error => console.log(error))
+    .catch(error => next(error))
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
+blogsRouter.delete('/:id', async (request, response, next) => {
+  const token = getTokenFrom(request)
+  console.log("saatiin token")
   try {
-    await Blog.findByIdAndDelete(request.params.id)
-    response.status(204).end()
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    console.log('saatiin decoded token')
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
+
+    const user = await User.findById(decodedToken.id)
+    const blog = await Blog.findById(request.params.id)
+
+    if (blog.user.toString() === user._id.toString()) {
+      await Blog.findByIdAndDelete(request.params.id)
+      response.status(204).end()
+    } else {
+      console.log("token ei toimi")
+      return response.status(401).json({ error: 'only the user who created the blog can remove it' })
+    }
+
   } catch (exception) {
-    console.log(exception)
-    //next(exception)
+    next(exception)
   }
 })
 
