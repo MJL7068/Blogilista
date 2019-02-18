@@ -7,7 +7,6 @@ usersRouter.get('/', async (request, response) => {
     .find({}).populate('blogs', { title: 1, author: 1, url: 1 })
     
   response.json(users.map(u => u.toJSON()))
-  //response.json(users.map(User.format))
 })
 
 usersRouter.post('/', async(request, response, next) => {
